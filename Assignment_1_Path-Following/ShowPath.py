@@ -24,6 +24,7 @@ class ShowPath:
         self.ax.plot(x, y)  # plot the path
         plt.pause(0.001)
 
+
     def update(self, robot_pos, look_ahead_point):
         """
         Update the figure with the current robot position and look-ahead point.
@@ -37,3 +38,6 @@ class ShowPath:
         lap, = self.ax.plot(look_ahead_point[0], look_ahead_point[1], 'xg')
         plt.pause(0.001)
         lap.remove()  # only the newest look-ahead point is shown
+
+    def pause_the_plot(self):
+        plt.show(block=True)

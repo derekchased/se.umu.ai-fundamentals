@@ -4,6 +4,7 @@ import math
 from Robot import *
 from Path import *
 from ShowPath import *
+from Stopwatch import *
 import a1_functions as a1f
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,27 +13,34 @@ LOOK_AHEAD_DISTANCE = 1
 
 class RobotController:
     def __init__(self, path_name):
+        self._robot = Robot()
         p = Path(path_name)
         path = p.getPath()
         self._path_matrix = a1f.conv_path_to_np(path)
-        print("Path", *((p["X"], p["Y"], p["Z"]) for p in path), sep="\n")
-        print("Path Matrix", self._path_matrix.shape, self._path_matrix)
-        self._robot = Robot()
+        #print("Path", *((p["X"], p["Y"], p["Z"]) for p in path), sep="\n")
+        #print("Path Matrix", self._path_matrix.shape, self._path_matrix)
         self._LOOK_AHEAD_DISTANCE = LOOK_AHEAD_DISTANCE
         self._sp = ShowPath(path)
+        self._running = False
+        #self._stop_watch = Stopwatch(path_name, self._robot)
 
 
+    def start_robot(self):
+        self._running = True
 
 
     def take_step(self):
+        #print("in take step, before stop watch run")
+        #self._stop_watch.run()
+        #print("in take step, after stop watch run")
         self._robot_position = self._robot.getPosition()
         self._robot_position_vector = a1f.conv_pos_to_np(self._robot_position)
-        print("robot pos", self._robot_position)
-        print("robot_pos_np", self._robot_position_vector.shape, self._robot_position_vector)
+        #print("robot position (raw json format):", self._robot_position)
+        #print("robot position in numpy format:", self._robot_position_vector.shape, self._robot_position_vector)
         self._robot_to_path_distances = a1f.get_distances_optimal1(self._robot_position_vector, self._path_matrix)
         goal_point_index = self._find_goal_point_index()
         self._goal_point_coordinate_world = self._path_matrix[goal_point_index]
-        print("robot_path_distances", self._robot_to_path_distances.shape, self._robot_to_path_distances)
+        #print("robot to path points distances", self._robot_to_path_distances.shape, self._robot_to_path_distances)
         print("goal point index: ", goal_point_index)
         print("goal point coordinate: ", self._goal_point_coordinate_world)
 
@@ -56,19 +64,27 @@ class RobotController:
         steering_angle = atan2(goal_point_y_RCS, goal_point_x_RCS)
 
         g = 2 * goal_point_y_RCS / LOOK_AHEAD_DISTANCE**2
-        linear_speed = 0.2
+        linear_speed = 0.3
         turn_rate = linear_speed * g
         self._robot.setMotion(linear_speed, turn_rate)
         self._path_matrix = self._path_matrix[goal_point_index:,:]
         print(len(self._path_matrix))
         self._sp.update(self._robot.getPosition(), self._goal_point_coordinate_world)
+        if (len(self._path_matrix) == 1):
+            self._running = False
 
-    def get_path_length(self):
-        return len(self._path_matrix)
+    #def get_path_length(self):
+    #    return len(self._path_matrix)
 
     def stop_running(self):
         self._robot.setMotion(0.0,0.0)
 
+
+    def get_running_status(self):
+        return self._running
+
+    def pause_plot(self):
+        self._sp.pause_the_plot()
 
 
     def print_path_length(self):
@@ -88,10 +104,15 @@ class RobotController:
 
 
 if __name__ == "__main__":
-    robotController = RobotController('Path-around-table.json')
-    #while robotController.get_path_length() != 0:
-    for i in range(100):
-        time.sleep(0.5)
+    #robotController = RobotController('Path-around-table-and-back.json')
+    #robotController = RobotController('Path-around-table.json')
+    robotController = RobotController('Path-to-bed.json')
+    #robotController = RobotController('Path-from-bed.json')
+    robotController.start_robot()
+    while robotController.get_running_status() == True:
+    #for i in range(200):
+        time.sleep(0.2)
         robotController.take_step()
 
     robotController.stop_running()
+    robotController.pause_plot()
