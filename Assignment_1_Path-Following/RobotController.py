@@ -90,11 +90,11 @@ class RobotController:
         self._sp.pause_the_plot()
 
 
-    def print_path_length(self):
-        ShowPath(self._path)
-        print("Path length = " + str(len(self._path)))
-        for i in range(len(path)):
-            print("Point number %d on the path!" )
+    #def print_path_length(self):
+    #    ShowPath(self._path)
+    #    print("Path length = " + str(len(self._path)))
+    #    for i in range(len(path)):
+    #        print("Point number %d on the path!" )
 
     def _find_goal_point_index(self):
         goal_point_index = 0
@@ -108,13 +108,12 @@ class RobotController:
 
 if __name__ == "__main__":
     #robotController = RobotController('Path-around-table-and-back.json')
-    robotController = RobotController('Path-around-table.json')
+    #robotController = RobotController('Path-around-table.json')
     #robotController = RobotController('Path-to-bed.json')
-    #robotController = RobotController('Path-from-bed.json')
+    robotController = RobotController('Path-from-bed.json')
     robotController.start_robot()
     while robotController.get_running_status() == True:
-    #for i in range(200):
-        time.sleep(0.2)
+        time.sleep(0.35)
         robotController.take_step()
 
     robotController.stop_running()
