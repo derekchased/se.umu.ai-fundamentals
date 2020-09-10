@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 LOOK_AHEAD_DISTANCE = 1
+GOAL_THRESHOLD = 0.1
 
 class RobotController:
     def __init__(self, path_name):
@@ -57,20 +58,22 @@ class RobotController:
         robot_position_y_WCS = self._robot_position_vector[1]
 
         psi = self._robot.getHeading()
+        print("Robot heading in WCS: ", psi)
 
         goal_point_x_RCS =  (goal_point_x_WCS - robot_position_x_WCS) * cos(psi) + (goal_point_y_WCS - robot_position_y_WCS) * sin(psi)
         goal_point_y_RCS = -(goal_point_x_WCS - robot_position_x_WCS) * sin(psi) + (goal_point_y_WCS - robot_position_y_WCS) * cos(psi)
 
-        steering_angle = atan2(goal_point_y_RCS, goal_point_x_RCS)
+        gp_angle = atan2(goal_point_y_RCS, goal_point_x_RCS)
+        print("Goal point angle in RCS: ", gp_angle * 180 / math.pi)
 
         g = 2 * goal_point_y_RCS / LOOK_AHEAD_DISTANCE**2
-        linear_speed = 0.3
+        linear_speed = 0.4
         turn_rate = linear_speed * g
         self._robot.setMotion(linear_speed, turn_rate)
         self._path_matrix = self._path_matrix[goal_point_index:,:]
         print(len(self._path_matrix))
         self._sp.update(self._robot.getPosition(), self._goal_point_coordinate_world)
-        if (len(self._path_matrix) == 1):
+        if (len(self._path_matrix) == 1 and self._robot_to_path_distances[0] < GOAL_THRESHOLD):
             self._running = False
 
     #def get_path_length(self):
@@ -105,8 +108,8 @@ class RobotController:
 
 if __name__ == "__main__":
     #robotController = RobotController('Path-around-table-and-back.json')
-    #robotController = RobotController('Path-around-table.json')
-    robotController = RobotController('Path-to-bed.json')
+    robotController = RobotController('Path-around-table.json')
+    #robotController = RobotController('Path-to-bed.json')
     #robotController = RobotController('Path-from-bed.json')
     robotController.start_robot()
     while robotController.get_running_status() == True:
