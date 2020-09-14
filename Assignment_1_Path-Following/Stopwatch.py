@@ -58,6 +58,6 @@ class Stopwatch:
 if __name__ == '__main__':
     #stopwatch = Stopwatch('Path-around-table-and-back.json')
     #stopwatch = Stopwatch('Path-around-table.json')
-    #stopwatch = Stopwatch('Path-to-bed.json')
-    stopwatch = Stopwatch('Path-from-bed.json')
+    stopwatch = Stopwatch('Path-to-bed.json')
+    #stopwatch = Stopwatch('Path-from-bed.json')
     stopwatch.run()

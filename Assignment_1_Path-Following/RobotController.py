@@ -12,6 +12,13 @@ import numpy as np
 LOOK_AHEAD_DISTANCE = 1
 GOAL_THRESHOLD = 0.1
 
+LINEAR_SPEED_LEVEL_1 = 0.2
+LINEAR_SPEED_LEVEL_2 = 0.25
+LINEAR_SPEED_LEVEL_3 = 0.3
+LINEAR_SPEED_LEVEL_4 = 0.35
+LINEAR_SPEED_LEVEL_5 = 0.4
+
+
 class RobotController:
     def __init__(self, path_name):
         self._robot = Robot()
@@ -63,11 +70,23 @@ class RobotController:
         goal_point_x_RCS =  (goal_point_x_WCS - robot_position_x_WCS) * cos(psi) + (goal_point_y_WCS - robot_position_y_WCS) * sin(psi)
         goal_point_y_RCS = -(goal_point_x_WCS - robot_position_x_WCS) * sin(psi) + (goal_point_y_WCS - robot_position_y_WCS) * cos(psi)
 
-        gp_angle = atan2(goal_point_y_RCS, goal_point_x_RCS)
-        print("Goal point angle in RCS: ", gp_angle * 180 / math.pi)
+        gp_angle_RCS = atan2(goal_point_y_RCS, goal_point_x_RCS)
+        gp_abs_angle_RCS_degree = abs(gp_angle_RCS) * 180 / math.pi
+
+        linear_speed = 0
+        if (gp_abs_angle_RCS_degree <= 10):
+            linear_speed = LINEAR_SPEED_LEVEL_5
+        elif (10 < gp_abs_angle_RCS_degree and gp_abs_angle_RCS_degree <= 20):
+            linear_speed = LINEAR_SPEED_LEVEL_4
+        elif (20 < gp_abs_angle_RCS_degree and gp_abs_angle_RCS_degree <= 30):
+            linear_speed = LINEAR_SPEED_LEVEL_3
+        elif (30 < gp_abs_angle_RCS_degree and gp_abs_angle_RCS_degree <= 40):
+            linear_speed = LINEAR_SPEED_LEVEL_2
+        elif (40 < gp_abs_angle_RCS_degree):
+            linear_speed = LINEAR_SPEED_LEVEL_1
+        print("Goal point angle in RCS: ", gp_angle_RCS * 180 / math.pi)
 
         g = 2 * goal_point_y_RCS / LOOK_AHEAD_DISTANCE**2
-        linear_speed = 0.4
         turn_rate = linear_speed * g
         self._robot.setMotion(linear_speed, turn_rate)
         self._path_matrix = self._path_matrix[goal_point_index:,:]
@@ -109,8 +128,8 @@ class RobotController:
 if __name__ == "__main__":
     #robotController = RobotController('Path-around-table-and-back.json')
     #robotController = RobotController('Path-around-table.json')
-    #robotController = RobotController('Path-to-bed.json')
-    robotController = RobotController('Path-from-bed.json')
+    robotController = RobotController('Path-to-bed.json')
+    #robotController = RobotController('Path-from-bed.json')
     robotController.start_robot()
     while robotController.get_running_status() == True:
         time.sleep(0.35)
