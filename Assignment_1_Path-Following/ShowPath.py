@@ -39,5 +39,6 @@ class ShowPath:
         plt.pause(0.001)
         lap.remove()  # only the newest look-ahead point is shown
 
+    # Show the plot after python finishes execution
     def pause_the_plot(self):
         plt.show(block=True)
