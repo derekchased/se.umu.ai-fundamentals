@@ -1,5 +1,6 @@
 """ Robot path following implementation based on the Pure Pursuit algorithm """
 
+import sys
 import math
 from Robot import *
 from Path import *
@@ -28,7 +29,7 @@ LINEAR_SPEED_LEVEL_5 = .8"""
 
 class RobotController:
 
-    # Constructor, takes filename 
+    # Constructor, takes path filename
     def __init__(self, path_name):
         self._robot = Robot()
         p = Path(path_name)
@@ -42,7 +43,7 @@ class RobotController:
         self._LOOK_AHEAD_DISTANCE = LOOK_AHEAD_DISTANCE
         self._sp = ShowPath(path)
         self._running = False
-        self._stop_watch = Stopwatch(path_name)
+        #self._stop_watch = Stopwatch(path_name)
 
 
     def start_robot(self):
@@ -180,12 +181,14 @@ class RobotController:
 
 if __name__ == "__main__":
 
-    # Pass in a filename of a path to begin the demo
+    # Filename of the path is passed in through the command line argument
+    robotController = RobotController(sys.argv[1])
 
-    #robotController = RobotController('Path-around-table-and-back.json')
-    #robotController = RobotController('Path-around-table.json')
-    robotController = RobotController('Path-to-bed.json')
-    #robotController = RobotController('Path-from-bed.json')
+    # Available paths:
+    # Path-around-table-and-back.json
+    # Path-around-table.json
+    # Path-to-bed.json
+    # Path-from-bed.json
 
     # Start robot driving
     robotController.start_robot()

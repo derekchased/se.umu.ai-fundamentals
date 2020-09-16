@@ -7,6 +7,8 @@ Author: Erik Billing (billing@cs.umu.se)
 
 Update by Ola Ringdahl 2019-09-19 adapted the code to the new class implementation of Lokarriaexample
 """
+
+import sys
 import math
 from Robot import *
 from Path import *
@@ -56,8 +58,6 @@ class Stopwatch:
 
 
 if __name__ == '__main__':
-    #stopwatch = Stopwatch('Path-around-table-and-back.json')
-    #stopwatch = Stopwatch('Path-around-table.json')
-    stopwatch = Stopwatch('Path-to-bed.json')
-    #stopwatch = Stopwatch('Path-from-bed.json')
+    # Filename of the path is passed in through the command line argument
+    stopwatch = Stopwatch(sys.argv[1])
     stopwatch.run()
