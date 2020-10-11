@@ -1,5 +1,6 @@
 import numpy as np
 import sys
+import matplotlib.pyplot as plt
 
 def load_and_prep_test_train_data(X_filename, Y_filename, train_percent = .8):
 	
@@ -155,9 +156,7 @@ def predict(X, W):
 	activated_indexes = np.argmax(activations_vector,1)
 
 	# 	Convert index to digit predictions
-
 	digit_predictions = np.copy(activated_indexes)
-
 	digit_predictions[ digit_predictions == 0 ] = 4
 	digit_predictions[ digit_predictions == 1 ] = 7
 	digit_predictions[ digit_predictions == 2 ] = 8
@@ -173,7 +172,7 @@ def run_main(training_images, training_labels, validation_images, validation_lab
 
 	LABRES = (validation_labels == "")
 	LABRES = True
-	
+
 	if(LABRES):
 		#	Live, use all the data for training
 		X_train, Y_train, X_test, Y_test = load_and_prep_test_train_data(training_images, training_labels, 1)
@@ -234,10 +233,11 @@ def run_main(training_images, training_labels, validation_images, validation_lab
 	NUM_SAMPLES = X_train.shape[0]
 
 	# Early  stopping
-	EPSILON = .001
+	EPSILON = .01
 
 	# Keep track of error/loss
 	iteration_errors = []
+	train_accuracy = []
 
 	# Keep track of epoch for early stopping
 	m = 0
@@ -333,6 +333,7 @@ def run_main(training_images, training_labels, validation_images, validation_lab
 		
 		# Keep track of aggregate error
 		iteration_errors.append(curr_iteration_aggregate_error)
+		train_accuracy.append(get_accuracy(X_train,weights, Y_labels_one_hot))
 
 		# Do some minimal training before considering early stopping
 		if len(iteration_errors) > MIN_ITER:
@@ -367,6 +368,21 @@ def run_main(training_images, training_labels, validation_images, validation_lab
 		print("test accuracy",get_accuracy(X_test, weights, Y_labels_test_one_hot))
 		print("val accuracy",get_accuracy(X_val, weights, Y_labels_validation_one_hot))
 
+
+		iteration_errors.append(curr_iteration_aggregate_error)
+		train_accuracy.append(get_accuracy(X_train,weights, Y_labels_one_hot))
+
+		plt.figure(figsize=(1,1),num=1) # num markers/ticks/steps on the graph [0,1]
+		plt.plot(np.arange(len(iteration_errors)),np.abs(iteration_errors),c='g') 
+		plt.title("Decreasing Train Error")
+		plt.xlabel('Iterations')
+		plt.ylabel('Error')
+		plt.show()
+		plt.title("Increasing Train Accuracy")
+		plt.plot(np.arange(len(train_accuracy)),train_accuracy,c='g') 
+		plt.xlabel('Iterations')
+		plt.ylabel('Accuracy')
+		plt.show()
 	#print(iteration_errors)
 	#diffs = np.diff(iteration_errors)
 	#print("diffs")
