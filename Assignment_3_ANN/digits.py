@@ -1,23 +1,37 @@
 import numpy as np
 import sys
 
-def load_and_prep_test_train_data():
+def load_and_prep_test_train_data(X_filename, Y_filename, train_percent = .8):
 	
 	# Load data from txt files
-	X, Y = load_and_prep_data("./MNIST/training-images.txt", "./MNIST/training-labels.txt")
+	X, Y = load_and_prep_data(training_images, training_labels)
 
 	# Split into test and train
-	X_train, Y_train, X_test, Y_test = train_test_split(X, Y);
+	X_train, Y_train, X_test, Y_test = train_test_split(X, Y, train_percent);
 
 	return X_train, Y_train, X_test, Y_test
 
 
-def load_and_prep_validation_data():
+def load_and_test_validation_data(X_filename, Y_filename):
 	
 	# Load data from txt files
-	X, Y = load_and_prep_data("./MNIST/validation-images.txt", "./MNIST/validation-labels.txt")
+	X = np.loadtxt(X_filename, skiprows=3) # load csv
+	Y = np.loadtxt(Y_filename, skiprows=3) # load csv
+
+	# Normalize the data
+	X = normalize_data(X)
 
 	return X, Y
+
+def load_validation_data(X_filename):
+	
+	# Load data from txt files
+	X = np.loadtxt(X_filename, skiprows=3) # load csv
+	
+	# Normalize the data
+	X = normalize_data(X)
+
+	return X
 
 
 def load_and_prep_data(X_filename, Y_filename):
@@ -116,15 +130,75 @@ def get_accuracy(X, W, Y):
 
 	return accuracy
 
+def predict(X, W):
+	# Step 7, Get Final activations for each sample accuracy
+	activations = []
+
+	#	Iterate over each sample
+	for i in range(X.shape[0]):
+		
+		# Get dot product of weights and the sample's features
+		weights_transpose_dot_x_i = np.dot(W.T,X[i,:]);
+		
+		# Take the activation function
+		activation = 1/(1+np.exp(-weights_transpose_dot_x_i))
+
+		# Append the activation function of this sample to the list
+		activations.append(activation)
+
+	# Step 8, Analyze activations
+
+	#	Convert list to vector
+	activations_vector = np.asarray(activations);
+
+	#	Get index of which node was activated for each sample
+	activated_indexes = np.argmax(activations_vector,1)
+
+	# 	Convert index to digit predictions
+
+	digit_predictions = np.copy(activated_indexes)
+
+	digit_predictions[ digit_predictions == 0 ] = 4
+	digit_predictions[ digit_predictions == 1 ] = 7
+	digit_predictions[ digit_predictions == 2 ] = 8
+	digit_predictions[ digit_predictions == 3 ] = 9
+
+	
+	return activated_indexes, digit_predictions
 
 
-def run_main():
+
+def run_main(training_images, training_labels, validation_images, validation_labels):
 	# Step 1, Load and prep the Data (shuffle, normalize, split)
-	X_train, Y_train, X_test, Y_test = load_and_prep_test_train_data()
+
+	LABRES = (validation_labels == "")
+	LABRES = True
+	
+	if(LABRES):
+		#	Live, use all the data for training
+		X_train, Y_train, X_test, Y_test = load_and_prep_test_train_data(training_images, training_labels, 1)
+		
+		# 	Load validation data
+		X_val = load_validation_data(validation_images)
+
+	else:
+		print("MAIN")
+		#	Testing, use .8 for training data
+		X_train, Y_train, X_test, Y_test = load_and_prep_test_train_data(training_images, training_labels,.8)
+		
+		# 	Load validation data and labels
+		X_val, Y_val = load_and_test_validation_data(validation_images, validation_labels)
+
+		# 	Encode labels to binary features
+		Y_labels_test_one_hot = one_hot_encode_labels(Y_test)
+
+		# 	Load validation data and labels
+		Y_labels_validation_one_hot = one_hot_encode_labels(Y_val)
+
 
 	# Step 2, One Hot Encode Y labels- Convert each class into it's own binary feature
 	Y_labels_one_hot = one_hot_encode_labels(Y_train)
-	Y_labels_test_one_hot = one_hot_encode_labels(Y_test)
+	
 
 	#print("Y_labels_one_hot\n",Y_labels_one_hot)
 
@@ -276,7 +350,22 @@ def run_main():
 			if(diff<EPSILON):
 				#print("break",m)
 				break;
-		
+	
+	if(LABRES):
+		#print("# " + str(X_val.shape[0]) + " label predictions")
+		#print("# Exactly two comment lines, then: one label/line")
+		indexes, predictions = predict(X_val, weights)
+
+		#for i in range(len(indexes)):
+			#print(indexes[i], predictions[i] )
+		print(*predictions, sep = "\n")
+
+	else:
+		print("==RESULTS==")
+		print("train epochs", m)
+		print("train accuracy",get_accuracy( X_train, weights, Y_labels_one_hot))
+		print("test accuracy",get_accuracy(X_test, weights, Y_labels_test_one_hot))
+		print("val accuracy",get_accuracy(X_val, weights, Y_labels_validation_one_hot))
 
 	#print(iteration_errors)
 	#diffs = np.diff(iteration_errors)
@@ -286,13 +375,23 @@ def run_main():
 	#print(iteration_errors[-2])
 	#print(np.diff(iteration_errors[-1],iteration_errors[-2]))
 
-	print("==RESULTS==")
-	print(m)
-	print("train accuracy",get_accuracy( X_train, weights, Y_labels_one_hot))
-	print("test accuracy",get_accuracy(X_test, weights, Y_labels_test_one_hot))
+	
 
 
 if __name__ == "__main__":
-	print('Number of arguments:', len(sys.argv), 'arguments.')
-	print('Argument List:', str(sys.argv))
-	run_main()
+	#print('Number of arguments:', len(sys.argv), 'arguments.')
+	#print('Argument List:', str(sys.argv))
+
+	if(len(sys.argv)>1):
+		training_images = sys.argv[1]
+		training_labels = sys.argv[2]
+		validation_images = sys.argv[3]
+		validation_labels = ""
+	else:
+		training_images = "./MNIST/training-images.txt"
+		training_labels = "./MNIST/training-labels.txt"
+		validation_images = "./MNIST/validation-images.txt"
+		validation_labels = "./MNIST/validation-labels.txt"
+	# python3 digits.py training-images.txt training-labels.txt validation-images.txt
+
+	run_main(training_images, training_labels, validation_images, validation_labels)
