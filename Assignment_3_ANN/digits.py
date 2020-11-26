@@ -1,94 +1,7 @@
 import numpy as np
 import sys
 import matplotlib.pyplot as plt
-
-def load_and_prep_test_train_data(X_filename, Y_filename, train_percent = .8):
-	
-	# Load data from txt files
-	X, Y = load_and_prep_data(training_images, training_labels)
-
-	# Split into test and train
-	X_train, Y_train, X_test, Y_test = train_test_split(X, Y, train_percent);
-
-	return X_train, Y_train, X_test, Y_test
-
-
-def load_and_test_validation_data(X_filename, Y_filename):
-	
-	# Load data from txt files
-	X = np.loadtxt(X_filename, skiprows=3) # load csv
-	Y = np.loadtxt(Y_filename, skiprows=3) # load csv
-
-	# Normalize the data
-	X = normalize_data(X)
-
-	return X, Y
-
-def load_validation_data(X_filename):
-	
-	# Load data from txt files
-	X = np.loadtxt(X_filename, skiprows=3) # load csv
-	
-	# Normalize the data
-	X = normalize_data(X)
-
-	return X
-
-
-def load_and_prep_data(X_filename, Y_filename):
-	# Load the data, skip first 3 rows which are comments
-	X = np.loadtxt(X_filename, skiprows=3) # load csv
-	Y = np.loadtxt(Y_filename, skiprows=3) # load csv
-
-	# Randomize the data
-	X, Y = randomize_data(X, Y);
-
-	# Normalize the data
-	X = normalize_data(X)
-
-	return X, Y
-	
-def normalize_data(X):
-	X_normalized = X/255
-	return X_normalized
-
-def randomize_data(X, y, seed=7):
-    # Create generator object with seed (for consistent testing across compilation)
-    #gnrtr = np.random.default_rng(7)
-    np.random.seed(seed)
-
-    # Create random array with values permuted from the num elements of y
-    #r = gnrtr.permutation(len(y))
-    r = np.random.permutation(len(y))
-
-    # Reorganize X and y based on the random permutation, all columns
-    return X[r, :], y[r]
-
-def train_test_split(X, Y, train_percent=.8):
-	train_size = int(len(X)*train_percent)
-	X_train = X[:train_size, :]
-	X_test = X[train_size:, :]
-	Y_train = Y[:train_size]
-	Y_test = Y[train_size:]
-	return X_train, Y_train, X_test, Y_test
-
-def get_random_weights(weight_dimensions):
-	# randominze between -.5, .5
-	return np.random.random_sample(weight_dimensions)
-
-def one_hot_encode_labels(Y):
-	#	a) Get unique Y Labels
-	Y_labels = np.unique(Y)
-
-	#	b) Create zero array with dimension (length of train samples, num unique labels)
-	Y_labels_one_hot = np.zeros(  (  len(Y), len(Y_labels) ))
-
-	#	c) Mark the correct feature with a 1
-	for index, classification in enumerate(Y_labels):
-		#print("index",index, "classification", classification )
-		Y_labels_one_hot[np.argwhere(Y == classification),index] = 1
-
-	return Y_labels_one_hot
+import helper_functions as hf
 
 def get_accuracy(X, W, Y):
 	# Step 7, Get Final activations for each sample accuracy
@@ -162,41 +75,39 @@ def predict(X, W):
 	digit_predictions[ digit_predictions == 2 ] = 8
 	digit_predictions[ digit_predictions == 3 ] = 9
 
-	
 	return activated_indexes, digit_predictions
 
 
 
-def run_main(training_images, training_labels, validation_images, validation_labels):
+def run_main(training_images_file_path, training_labels_file_path, validation_images_file_path, validation_labels_file_path):
 	# Step 1, Load and prep the Data (shuffle, normalize, split)
 
-	LABRES = (validation_labels == "")
-	LABRES = True
+	LABRES = (validation_labels_file_path == "")
+	# LABRES = True
 
 	if(LABRES):
 		#	Live, use all the data for training
-		X_train, Y_train, X_test, Y_test = load_and_prep_test_train_data(training_images, training_labels, 1)
+		X_train, Y_train, X_test, Y_test = hf.load_and_prep_test_train_data(training_images_file_path, training_labels_file_path, 1)
 		
 		# 	Load validation data
-		X_val = load_validation_data(validation_images)
+		X_val = hf.load_validation_data(validation_images_file_path)
 
 	else:
-		print("MAIN")
 		#	Testing, use .8 for training data
-		X_train, Y_train, X_test, Y_test = load_and_prep_test_train_data(training_images, training_labels,.8)
+		X_train, Y_train, X_test, Y_test = hf.load_and_prep_test_train_data(training_images_file_path, training_labels_file_path,.8)
 		
 		# 	Load validation data and labels
-		X_val, Y_val = load_and_test_validation_data(validation_images, validation_labels)
+		X_val, Y_val = hf.load_and_test_validation_data(validation_images_file_path, validation_labels_file_path)
 
 		# 	Encode labels to binary features
-		Y_labels_test_one_hot = one_hot_encode_labels(Y_test)
+		Y_labels_test_one_hot = hf.one_hot_encode_labels(Y_test)
 
 		# 	Load validation data and labels
-		Y_labels_validation_one_hot = one_hot_encode_labels(Y_val)
+		Y_labels_validation_one_hot = hf.one_hot_encode_labels(Y_val)
 
 
 	# Step 2, One Hot Encode Y labels- Convert each class into it's own binary feature
-	Y_labels_one_hot = one_hot_encode_labels(Y_train)
+	Y_labels_one_hot = hf.one_hot_encode_labels(Y_train)
 	
 
 	#print("Y_labels_one_hot\n",Y_labels_one_hot)
@@ -214,7 +125,7 @@ def run_main(training_images, training_labels, validation_images, validation_lab
 	weights_matrix_dimension = (X_train.shape[1], len(Y_labels_one_hot[0]))
 
 	#	b) Fill with random values
-	weights = get_random_weights(weights_matrix_dimension)
+	weights = hf.get_random_weights(weights_matrix_dimension)
 	#print("weights", weights.shape,"\n",weights)
 	#print("\nweights.T", weights.T.shape,"\n",weights.T)
 
@@ -269,65 +180,23 @@ def run_main(training_images, training_labels, validation_images, validation_lab
 			#	a) Get the difference between the correct label
 			#	   and the activation function
 			error = Y_labels_one_hot[i] - activation  
-			#labels [4]
 
-			#			[1    0     0    0]
-			#activation [1  .09   .73   .01    ]
-				#		 0  -.09  -.73   -.01
 			# 	b) Multiply by the learning rate
 			error2 = learning_rate*error
 
 			# 	c) Multiply by the activation
-			error3 = error2.reshape(-1,1)*current_x#error2*activation
+			error3 = error2.reshape(-1,1)*current_x
 
 			#	d) Add this sample's error to aggregate error for this iteration
 			curr_iteration_aggregate_error = curr_iteration_aggregate_error + np.sum(error3)
 
 
-			#	d) Multiply by the current weights
-			#error4 = error3*weights_transpose_dot_x_i
-
 			# Step 5, Add the current weights with the error
-			#	Do error4.reshape(-1,1) so numpy can broadcast 
-			#	the operation to all elements in the weight vector
-			#	error4.reshape(-1,1).shape = (4,1)
-			#	weights.T.shape = (4,784)
-			#	... so it will add error4[0] to all weights.T[0,:]
-			#	... so it will add error4[1] to all weights.T[1,:]
-			#new_weights = weights.T + error4.reshape(-1,1)
-			new_weights = weights.T + error3#.reshape(-1,1)
+			new_weights = weights.T + error3
 
 			# Step 6, Assign the new weights to the weights
 			weights = new_weights.T
 			
-			#print("weights_transpose_dot_x_i.shape",weights_transpose_dot_x_i.shape)
-			#print("activation", activation)
-			#print("error", error)
-
-			"""print("\n")
-			print(i,"update weights")
-			print("current_x", current_x.shape)
-			print("Y_labels_one_hot[",i,"]", Y_labels_one_hot[i])
-			print("current_x.shape",current_x.shape)
-			print("weights_transpose_dot_x_i.shape",weights_transpose_dot_x_i.shape)
-			print("activation", activation)
-			print("error", error)
-			print("error>=0", error>=0)
-			print("error2", error2)
-			#print("\nerror2", error2.shape,error2)
-			#print("aaa", (error2.reshape(-1,1)*current_x).shape)
-			#print("error2", error2.reshape(-1,1))
-			#print("error2*weights.T", error2[0]*weights.T[0])
-			
-			print("i")
-			print("sum curr errors", np.sum(error3))
-			print("error aggregate", np.sum(curr_iteration_aggregate_error))
-			#print("error3", error3.shape,error3)
-			#print("error3[0]", error3[0])
-			#print("error4", error4.shape, error4)
-			#print("error4.reshape(-1,1)",error4.reshape(-1,1).shape, error4.reshape(-1,1))
-			#print("weights = new_weights.T",new_weights.T.shape)"""
-
 
 		# THIS IS A VERY BASIC EARLY STOPPING IMPLEMENTATION
 		
@@ -340,25 +209,21 @@ def run_main(training_images, training_labels, validation_images, validation_lab
 
 			# Get the difference between current and previous epoch errors
 			diff = abs( iteration_errors[-1] - iteration_errors[-2]  )
-			# print("diff",diff)
-			# print("<eps",diff<EPSILON)
-			# print("train accuracy",get_accuracy(X_train,weights, Y_labels_one_hot))
-			# print("test accuracy ",get_accuracy(X_test,weights,  Y_labels_test_one_hot))
-
+			
 			# The diff is 'how much did the loss improve'
 			# So we check if the improvement is less than the minimum improvement value epsilon
 			# If it is less, then we break out of training
 			if(diff<EPSILON):
-				#print("break",m)
+				print("break",m)
+				print("diff",diff)
+				print("EPSILON",EPSILON)
+				print("MIN_ITER",MIN_ITER)
+				print("MAX_ITER",MAX_ITER)
 				break;
 	
+	# This is a check to see if running live on Labres or at home
 	if(LABRES):
-		#print("# " + str(X_val.shape[0]) + " label predictions")
-		#print("# Exactly two comment lines, then: one label/line")
 		indexes, predictions = predict(X_val, weights)
-
-		#for i in range(len(indexes)):
-			#print(indexes[i], predictions[i] )
 		print(*predictions, sep = "\n")
 
 	else:
@@ -368,12 +233,16 @@ def run_main(training_images, training_labels, validation_images, validation_lab
 		print("test accuracy",get_accuracy(X_test, weights, Y_labels_test_one_hot))
 		print("val accuracy",get_accuracy(X_val, weights, Y_labels_validation_one_hot))
 
-
 		iteration_errors.append(curr_iteration_aggregate_error)
 		train_accuracy.append(get_accuracy(X_train,weights, Y_labels_one_hot))
 
 		plt.figure(figsize=(1,1),num=1) # num markers/ticks/steps on the graph [0,1]
-		plt.plot(np.arange(len(iteration_errors)),np.abs(iteration_errors),c='g') 
+
+		print( "derek", len(iteration_errors), len(X_train))
+		print("iteration_errors", iteration_errors)
+		print("X_train",X_train) 
+
+		plt.plot(np.arange(len(iteration_errors)),np.abs(iteration_errors)/len(X_train),c='g') 
 		plt.title("Decreasing Train Error")
 		plt.xlabel('Iterations')
 		plt.ylabel('Error')
@@ -383,31 +252,17 @@ def run_main(training_images, training_labels, validation_images, validation_lab
 		plt.xlabel('Iterations')
 		plt.ylabel('Accuracy')
 		plt.show()
-	#print(iteration_errors)
-	#diffs = np.diff(iteration_errors)
-	#print("diffs")
-	#print(diffs[-100:])
-	#print(iteration_errors[-1])
-	#print(iteration_errors[-2])
-	#print(np.diff(iteration_errors[-1],iteration_errors[-2]))
-
 	
-
-
 if __name__ == "__main__":
-	#print('Number of arguments:', len(sys.argv), 'arguments.')
-	#print('Argument List:', str(sys.argv))
-
 	if(len(sys.argv)>1):
-		training_images = sys.argv[1]
-		training_labels = sys.argv[2]
-		validation_images = sys.argv[3]
-		validation_labels = ""
+		training_images_file_path = sys.argv[1]
+		training_labels_file_path = sys.argv[2]
+		validation_images_file_path = sys.argv[3]
+		validation_labels_file_path = ""
 	else:
-		training_images = "./MNIST/training-images.txt"
-		training_labels = "./MNIST/training-labels.txt"
-		validation_images = "./MNIST/validation-images.txt"
-		validation_labels = "./MNIST/validation-labels.txt"
-	# python3 digits.py training-images.txt training-labels.txt validation-images.txt
+		training_images_file_path = "./MNIST/training-images.txt"
+		training_labels_file_path = "./MNIST/training-labels.txt"
+		validation_images_file_path = "./MNIST/validation-images.txt"
+		validation_labels_file_path = "./MNIST/validation-labels.txt"
 
-	run_main(training_images, training_labels, validation_images, validation_labels)
+	run_main(training_images_file_path, training_labels_file_path, validation_images_file_path, validation_labels_file_path)
